@@ -13,6 +13,25 @@ app.use(express.json());
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
 
+// jwt function verification
+const jwtVerification = (req, res, next) => {
+  const authorizationHeader = req.headers.authorization;
+  // console.log(authorizationHeader);
+  if (!authorizationHeader) {
+    return res.status(401).send("access-unauthorized");
+  }
+  const receivedToken = authorizationHeader.split(" ")[1];
+  jwt.verify(receivedToken, process.env.ACCESS_TOKEN, function (err, decoded) {
+    if (err) {
+      return res.status(403).send({ message: "Forbidden Access" });
+    }
+    req.decoded = decoded;
+    next();
+  });
+
+  // console.log("only token", receivedToken);
+};
+
 // data base connection
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.dhtiicz.mongodb.net/?retryWrites=true&w=majority`;
@@ -30,6 +49,23 @@ async function run() {
       const query = {};
       const users = await usersCollection.find(query).toArray();
       res.send(users);
+    });
+    // jwt token api
+    app.get("/jwt", async (req, res) => {
+      const email = req.query.email;
+      console.log(email);
+      const query = {
+        email: email,
+      };
+      const user = await usersCollection.findOne(query);
+
+      if (user) {
+        const token = jwt.sign({ email }, process.env.ACCESS_TOKEN, {
+          expiresIn: "1d",
+        });
+        return res.send({ accessToken: token });
+      }
+      res.status(403).send({ accessToken: " " });
     });
   } finally {
   }
