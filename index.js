@@ -44,12 +44,6 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    const usersCollection = client.db("carsLobby").collection("users");
-    app.get("/users", async (req, res) => {
-      const query = {};
-      const users = await usersCollection.find(query).toArray();
-      res.send(users);
-    });
     // jwt token api
     app.get("/jwt", async (req, res) => {
       const email = req.query.email;
@@ -66,6 +60,25 @@ async function run() {
         return res.send({ accessToken: token });
       }
       res.status(403).send({ accessToken: " " });
+    });
+    // users get api
+    const usersCollection = client.db("carsLobby").collection("users");
+    app.get("/users", async (req, res) => {
+      const email = req.query.email;
+      if (email) {
+        const query = {
+          email: email,
+        };
+      }
+      const query = {};
+      const users = await usersCollection.find(query).toArray();
+      res.send(users);
+    });
+    // users post api
+    app.post("/users", async (req, res) => {
+      const user = req.body;
+      const result = await usersCollection.insertOne(user);
+      res.send(result);
     });
   } finally {
   }
