@@ -25,6 +25,12 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
+    const usersCollection = client.db("carsLobby").collection("users");
+    app.get("/users", async (req, res) => {
+      const query = {};
+      const users = await usersCollection.find(query).toArray();
+      res.send(users);
+    });
   } finally {
   }
 }
