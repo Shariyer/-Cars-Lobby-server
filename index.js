@@ -49,10 +49,11 @@ async function run() {
       .db("carsLobby")
       .collection("categories");
     const carsCollection = client.db("carsLobby").collection("cars");
+    const bookingsCollection = client.db("carsLobby").collection("bookings");
     // jwt token api
     app.get("/jwt", async (req, res) => {
       const email = req.query.email;
-      console.log(email);
+      // console.log(email);
       const query = {
         email: email,
       };
@@ -101,6 +102,18 @@ async function run() {
     app.get("/categories", async (req, res) => {
       const query = {};
       const result = await categoriesCollection.find(query).toArray();
+      res.send(result);
+    });
+    // car bookings
+    app.post("/bookings", jwtVerification, async (req, res) => {
+      const email = req.query.email;
+      const decodedEmail = req.decoded.email;
+      if (decodedEmail !== email) {
+        return res.status(403).send({ message: "Forbidden Access" });
+      }
+      const booking = req.body;
+      console.log(booking);
+      const result = await bookingsCollection.insertOne(booking);
       res.send(result);
     });
   } finally {
