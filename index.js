@@ -44,6 +44,11 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
+    const usersCollection = client.db("carsLobby").collection("users");
+    const categoriesCollection = client
+      .db("carsLobby")
+      .collection("categories");
+    const carsCollection = client.db("carsLobby").collection("cars");
     // jwt token api
     app.get("/jwt", async (req, res) => {
       const email = req.query.email;
@@ -52,7 +57,7 @@ async function run() {
         email: email,
       };
       const user = await usersCollection.findOne(query);
-
+      console.log(user);
       if (user) {
         const token = jwt.sign({ email }, process.env.ACCESS_TOKEN, {
           expiresIn: "1d",
@@ -62,15 +67,18 @@ async function run() {
       res.status(403).send({ accessToken: " " });
     });
     // users get api
-    const usersCollection = client.db("carsLobby").collection("users");
-    app.get("/users", async (req, res) => {
+    app.get("/users", jwtVerification, async (req, res) => {
       const email = req.query.email;
+      const decodedEmail = req.decoded.email;
+      if (decodedEmail !== email) {
+        return res.status(403).send({ message: "Forbidden Access" });
+      }
+      let query = {};
       if (email) {
-        const query = {
+        query = {
           email: email,
         };
       }
-      const query = {};
       const users = await usersCollection.find(query).toArray();
       res.send(users);
     });
@@ -78,6 +86,21 @@ async function run() {
     app.post("/users", async (req, res) => {
       const user = req.body;
       const result = await usersCollection.insertOne(user);
+      res.send(result);
+    });
+    // cats collection api
+    app.get("/cars", async (req, res) => {
+      const categoryName = req.query.categoryName;
+      const query = {
+        categoryName: categoryName,
+      };
+      const cars = await carsCollection.find(query).toArray();
+      res.send(cars);
+    });
+    // categories collection api
+    app.get("/categories", async (req, res) => {
+      const query = {};
+      const result = await categoriesCollection.find(query).toArray();
       res.send(result);
     });
   } finally {
@@ -90,5 +113,5 @@ app.get("/", (req, res) => {
   res.send("Welcome, CarsLobby server is Running successfully");
 });
 app.listen(port, (req, res) => {
-  console.log(`CarsLobby Server is running at port: ${port}`);
+  console.log(`CarsLobby is running at port: ${port}`);
 });
