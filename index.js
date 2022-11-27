@@ -93,28 +93,34 @@ async function run() {
       res.send(result);
     });
     //all cars / products collection api
-    app.get("/cars", jwtVerification, async (req, res) => {
-      const email = req.query.email;
-      const decodedEmail = req.decoded.email;
-      if (decodedEmail !== email) {
-        return res.status(403).send({ message: "Forbidden Access" });
-      }
+    app.get("/cars", async (req, res) => {
       const categoryName = req.query.categoryName;
-      const sellerEmail = req.query.sellerEmail;
-      let query = {};
-      if (sellerEmail) {
-        query = {
-          sellerEmail: sellerEmail,
-        };
-      } else if (categoryName) {
-        query = {
-          categoryName: categoryName,
-        };
-      }
+
+      const query = {
+        categoryName: categoryName,
+      };
       const cars = await carsCollection.find(query).toArray();
       // const bookedcars = cars.map((car) => car.pro);
       res.send(cars);
     });
+    app.get("/cars/:email", jwtVerification, async (req, res) => {
+      const email = req.query.email;
+      console.log(email, "queryEmail");
+      const decodedEmail = req.decoded.email;
+      console.log(decodedEmail, "decodedEmail");
+      if (decodedEmail !== email) {
+        return res.status(403).send({ message: "Forbidden Access" });
+      }
+      const sellerEmail = req.params.email;
+
+      const query = {
+        sellerEmail: sellerEmail,
+      };
+      const cars = await carsCollection.find(query).toArray();
+      // const bookedcars = cars.map((car) => car.pro);
+      res.send(cars);
+    });
+
     // categories collection api
     app.get("/categories", async (req, res) => {
       const query = {};
