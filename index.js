@@ -2,7 +2,7 @@
 
 const express = require("express");
 const cors = require("cors");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -114,6 +114,19 @@ async function run() {
       const result = await carsCollection.insertOne(car);
       res.send(result);
     });
+    app.delete("/cars/:id", jwtVerification, async (req, res) => {
+      const email = req.query.email;
+      const decodedEmail = req.decoded.email;
+      if (decodedEmail !== email) {
+        return res.status(403).send({ message: "Forbidden Access" });
+      }
+      const id = req.params.id;
+      const filter = {
+        _id: ObjectId(id),
+      };
+      const result = await carsCollection.deleteOne(filter);
+      res.send(result);
+    });
     // loading specific sellers product
     app.get("/cars/:email", jwtVerification, async (req, res) => {
       const email = req.query.email;
@@ -146,6 +159,20 @@ async function run() {
       const booking = req.body;
       console.log(booking);
       const result = await bookingsCollection.insertOne(booking);
+      res.send(result);
+    });
+    // delete bookings
+    app.delete("/bookings/:id", jwtVerification, async (req, res) => {
+      const email = req.query.email;
+      const decodedEmail = req.decoded.email;
+      if (decodedEmail !== email) {
+        return res.status(403).send({ message: "Forbidden Access" });
+      }
+      const id = req.params.id;
+      const filter = {
+        _id: ObjectId(id),
+      };
+      const result = await bookingsCollection.deleteOne(filter);
       res.send(result);
     });
     // My orders api from booking
@@ -198,6 +225,20 @@ async function run() {
       console.log(sellers);
       res.send(sellers);
     });
+    // deleting seller
+    app.delete("/users/allsellers/:id", jwtVerification, async (req, res) => {
+      const email = req.query.email;
+      const decodedEmail = req.decoded.email;
+      if (decodedEmail !== email) {
+        return res.status(403).send({ message: "Forbidden Access" });
+      }
+      const id = req.params.id;
+      const filter = {
+        _id: ObjectId(id),
+      };
+      const result = await usersCollection.deleteOne(filter);
+      res.send(result);
+    });
     // all buyers
     app.get("/users/allBuyers", async (req, res) => {
       const query = {
@@ -206,6 +247,20 @@ async function run() {
       const buyers = await usersCollection.find(query).toArray();
       console.log(buyers);
       res.send(buyers);
+    });
+    // deleting buyer
+    app.delete("/users/allBuyers/:id", jwtVerification, async (req, res) => {
+      const email = req.query.email;
+      const decodedEmail = req.decoded.email;
+      if (decodedEmail !== email) {
+        return res.status(403).send({ message: "Forbidden Access" });
+      }
+      const id = req.params.id;
+      const filter = {
+        _id: ObjectId(id),
+      };
+      const result = await usersCollection.deleteOne(filter);
+      res.send(result);
     });
   } finally {
   }
