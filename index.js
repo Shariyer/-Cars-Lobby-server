@@ -70,7 +70,9 @@ async function run() {
     // users get api
     app.get("/users", jwtVerification, async (req, res) => {
       const email = req.query.email;
+      console.log("query", email);
       const decodedEmail = req.decoded.email;
+      console.log("decoded ", decodedEmail);
       if (decodedEmail !== email) {
         return res.status(403).send({ message: "Forbidden Access" });
       }
@@ -81,6 +83,7 @@ async function run() {
         };
       }
       const users = await usersCollection.find(query).toArray();
+
       res.send(users);
     });
     // users post api
@@ -89,13 +92,14 @@ async function run() {
       const result = await usersCollection.insertOne(user);
       res.send(result);
     });
-    // cats collection api
+    // cars collection api
     app.get("/cars", async (req, res) => {
       const categoryName = req.query.categoryName;
       const query = {
         categoryName: categoryName,
       };
       const cars = await carsCollection.find(query).toArray();
+      // const bookedcars = cars.map((car) => car.pro);
       res.send(cars);
     });
     // categories collection api
@@ -111,10 +115,70 @@ async function run() {
       if (decodedEmail !== email) {
         return res.status(403).send({ message: "Forbidden Access" });
       }
-      const booking = req.body;
+      const booking = req.b;
+      ody;
       console.log(booking);
       const result = await bookingsCollection.insertOne(booking);
       res.send(result);
+    });
+    // My orders api from booking
+    app.get("/bookings", jwtVerification, async (req, res) => {
+      const decodedEmail = req.decoded.email;
+      const email = req.query.email;
+      // console.log(email, "booking ");
+      if (decodedEmail !== email) {
+        return res.status(403).send({ message: "Forbidden Access" });
+      }
+      const query = {
+        customerEmail: email,
+      };
+      const result = await bookingsCollection.find(query).toArray();
+      console.log(result);
+      res.send(result);
+    });
+    // admin or not
+    app.get("/users/admin/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email };
+      const user = await usersCollection.findOne(query);
+      res.send({ isAdmin: user?.userType === "admin" });
+    });
+    // is seller or not
+    app.get("/users/seller/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email };
+      const user = await usersCollection.findOne(query);
+      res.send({ isSeller: user?.userType === "seller" });
+    });
+    // is buyer or not
+    app.get("/users/buyer/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email };
+      const user = await usersCollection.findOne(query);
+      res.send({ isBuyer: user?.userType === "buyer" });
+    });
+    // all sellers
+    app.get("/users/allsellers", jwtVerification, async (req, res) => {
+      const decodedEmail = req.decoded.email;
+      const email = req.query.email;
+      if (decodedEmail !== email) {
+        return res.status(403).send({ message: "Forbidden Access" });
+      }
+      const query = {
+        userType: "seller",
+      };
+      const sellers = await usersCollection.find(query).toArray();
+      console.log(sellers);
+      res.send(sellers);
+    });
+    // all buyers
+    app.get("/users/allBuyers", async (req, res) => {
+      const query = {
+        userType: "buyer",
+      };
+      const buyers = await usersCollection.find(query).toArray();
+      console.log(buyers);
+      res.send(buyers);
     });
   } finally {
   }
