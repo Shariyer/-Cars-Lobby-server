@@ -103,11 +103,21 @@ async function run() {
       // const bookedcars = cars.map((car) => car.pro);
       res.send(cars);
     });
+    // add car
+    app.post("/cars", jwtVerification, async (req, res) => {
+      const email = req.query.email;
+      const decodedEmail = req.decoded.email;
+      if (decodedEmail !== email) {
+        return res.status(403).send({ message: "Forbidden Access" });
+      }
+      const car = req.body;
+      const result = await carsCollection.insertOne(car);
+      res.send(result);
+    });
+    // loading specific sellers product
     app.get("/cars/:email", jwtVerification, async (req, res) => {
       const email = req.query.email;
-      console.log(email, "queryEmail");
       const decodedEmail = req.decoded.email;
-      console.log(decodedEmail, "decodedEmail");
       if (decodedEmail !== email) {
         return res.status(403).send({ message: "Forbidden Access" });
       }
@@ -117,7 +127,6 @@ async function run() {
         sellerEmail: sellerEmail,
       };
       const cars = await carsCollection.find(query).toArray();
-      // const bookedcars = cars.map((car) => car.pro);
       res.send(cars);
     });
 
