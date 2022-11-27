@@ -92,12 +92,25 @@ async function run() {
       const result = await usersCollection.insertOne(user);
       res.send(result);
     });
-    // cars collection api
-    app.get("/cars", async (req, res) => {
+    //all cars / products collection api
+    app.get("/cars", jwtVerification, async (req, res) => {
+      const email = req.query.email;
+      const decodedEmail = req.decoded.email;
+      if (decodedEmail !== email) {
+        return res.status(403).send({ message: "Forbidden Access" });
+      }
       const categoryName = req.query.categoryName;
-      const query = {
-        categoryName: categoryName,
-      };
+      const sellerEmail = req.query.sellerEmail;
+      let query = {};
+      if (sellerEmail) {
+        query = {
+          sellerEmail: sellerEmail,
+        };
+      } else if (categoryName) {
+        query = {
+          categoryName: categoryName,
+        };
+      }
       const cars = await carsCollection.find(query).toArray();
       // const bookedcars = cars.map((car) => car.pro);
       res.send(cars);
@@ -115,8 +128,7 @@ async function run() {
       if (decodedEmail !== email) {
         return res.status(403).send({ message: "Forbidden Access" });
       }
-      const booking = req.b;
-      ody;
+      const booking = req.body;
       console.log(booking);
       const result = await bookingsCollection.insertOne(booking);
       res.send(result);
