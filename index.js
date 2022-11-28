@@ -51,6 +51,9 @@ async function run() {
     const carsCollection = client.db("carsLobby").collection("cars");
     const bookingsCollection = client.db("carsLobby").collection("bookings");
     const reportsCollection = client.db("carsLobby").collection("reports");
+    const advertisementsCollection = client
+      .db("carsLobby")
+      .collection("advertisements");
     // jwt token api
     app.get("/jwt", async (req, res) => {
       const email = req.query.email;
@@ -346,6 +349,51 @@ async function run() {
         _id: id,
       };
       const result = await reportsCollection.deleteOne(filter);
+      res.send(result);
+    });
+    // get adverting
+    app.get("/advertise", async (req, res) => {
+      const query = {};
+      const result = await advertisementsCollection.find(query).toArray();
+      res.send(result);
+    });
+    //post advertising
+    app.post("/advertise/:id", jwtVerification, async (req, res) => {
+      const email = req.query.email;
+      const decodedEmail = req.decoded.email;
+      if (decodedEmail !== email) {
+        return res.status(403).send({ message: "Forbidden Access" });
+      }
+      const advertingProduct = req.body;
+      const id = req.params.id;
+
+      const query = {
+        _id: id,
+      };
+
+      const advertiseMent = await advertisementsCollection
+        .find(query)
+        .toArray();
+      // console.log(advertiseMent.length === 0);
+      if (advertiseMent.length === 0) {
+        const result = await advertisementsCollection.insertOne(
+          advertingProduct
+        );
+        res.send(result);
+      }
+    });
+    // stop advertising
+    app.delete("/advertise/:id", jwtVerification, async (req, res) => {
+      const email = req.query.email;
+      const decodedEmail = req.decoded.email;
+      if (decodedEmail !== email) {
+        return res.status(403).send({ message: "Forbidden Access" });
+      }
+      const id = req.params.id;
+      const filter = {
+        _id: id,
+      };
+      const result = await advertisementsCollection.deleteOne(filter);
       res.send(result);
     });
   } finally {
