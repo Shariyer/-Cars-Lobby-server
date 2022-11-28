@@ -50,6 +50,7 @@ async function run() {
       .collection("categories");
     const carsCollection = client.db("carsLobby").collection("cars");
     const bookingsCollection = client.db("carsLobby").collection("bookings");
+    const reportsCollection = client.db("carsLobby").collection("reports");
     // jwt token api
     app.get("/jwt", async (req, res) => {
       const email = req.query.email;
@@ -86,6 +87,7 @@ async function run() {
 
       res.send(users);
     });
+
     // users post api
     app.post("/users", async (req, res) => {
       const user = req.body;
@@ -225,6 +227,16 @@ async function run() {
       console.log(sellers);
       res.send(sellers);
     });
+    // seller verified or not
+    app.get("/users/allsellers/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email };
+      const user = await usersCollection.findOne(query);
+      res.send({
+        verification: user?.sellerStatus === "verified",
+        user_id: user._id,
+      });
+    });
     // deleting seller
     app.delete("/users/allsellers/:id", jwtVerification, async (req, res) => {
       const email = req.query.email;
@@ -254,11 +266,23 @@ async function run() {
           sellerStatus: "verified",
         },
       };
+      const productFilter = { _id: ObjectId(id) };
+      const updatedDocForProduct = {
+        $set: {
+          sellerStatus: "verified",
+        },
+      };
       const result = await usersCollection.updateOne(
         filter,
         updatedDoc,
         upsert
       );
+      const sellerUpdateInproduct = await carsCollection.updateOne(
+        productFilter,
+        updatedDocForProduct,
+        upsert
+      );
+      console.log(sellerUpdateInproduct);
       res.send(result);
     });
     // all buyers
@@ -282,6 +306,46 @@ async function run() {
         _id: ObjectId(id),
       };
       const result = await usersCollection.deleteOne(filter);
+      res.send(result);
+    });
+    // report products
+    app.get("/reports", async (req, res) => {
+      const query = {};
+      const result = await reportsCollection.find(query).toArray();
+      res.send(result);
+    });
+    app.post("/reports/:id", jwtVerification, async (req, res) => {
+      const email = req.query.email;
+      const decodedEmail = req.decoded.email;
+      if (decodedEmail !== email) {
+        return res.status(403).send({ message: "Forbidden Access" });
+      }
+      const rReportedProducts = req.body;
+      const id = req.params.id;
+      // console.log(rReportedProducts, "reporteeddddd");
+
+      const query = {
+        _id: id,
+      };
+
+      const reportedItems = await reportsCollection.find(query).toArray();
+      if (reportedItems.length === 0) {
+        const result = await reportsCollection.insertOne(rReportedProducts);
+        res.send(result);
+      }
+    });
+    // delete reported items
+    app.delete("/reports/:id", jwtVerification, async (req, res) => {
+      const email = req.query.email;
+      const decodedEmail = req.decoded.email;
+      if (decodedEmail !== email) {
+        return res.status(403).send({ message: "Forbidden Access" });
+      }
+      const id = req.params.id;
+      const filter = {
+        _id: id,
+      };
+      const result = await reportsCollection.deleteOne(filter);
       res.send(result);
     });
   } finally {
