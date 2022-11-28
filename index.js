@@ -239,6 +239,28 @@ async function run() {
       const result = await usersCollection.deleteOne(filter);
       res.send(result);
     });
+    // seller verify
+    app.put("/users/allSellers/:id", jwtVerification, async (req, res) => {
+      const email = req.query.email;
+      const decodedEmail = req.decoded.email;
+      if (decodedEmail !== email) {
+        return res.status(403).send({ message: "Forbidden Access" });
+      }
+      const id = req.params.id;
+      const filter = { _id: ObjectId(id) };
+      const upsert = { upsert: true };
+      const updatedDoc = {
+        $set: {
+          sellerStatus: "verified",
+        },
+      };
+      const result = await usersCollection.updateOne(
+        filter,
+        updatedDoc,
+        upsert
+      );
+      res.send(result);
+    });
     // all buyers
     app.get("/users/allBuyers", async (req, res) => {
       const query = {
